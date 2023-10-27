@@ -1,7 +1,9 @@
 const puppeteer = require('puppeteer');
 const XLSX = require('xlsx');
+const env = require('dotenv').config();
 
 
+const weblink = process.env.LINK;
 const link = XLSX.readFile('./arquivos antigos/01 404PROMORA FGTS C6 20 - 10 .xlsx');
 
 const worksheet = link.Sheets[link.SheetNames[1]];
@@ -30,7 +32,7 @@ arr = Object.values(data);
     const page = await browser.newPage();
 
     // Navegar até a página desejada
-    await page.goto('https://simulador.404promotora.com.br/page/fgts/simulation/stage-1/indication/8e1f0c6f-aa60-4da3-a07b-47954e147634');
+    await page.goto(weblink, { waitUntil: 'networkidle2' });
 
     // Esperar a página carregar completamente
     await page.waitForSelector('#name');
