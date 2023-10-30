@@ -3,24 +3,24 @@ const env = require('dotenv').config();
 
 
 class Database {
-
+    
     constructor() {
-        const coon = mysql.createConnection({
-            host: proccess.env.db_server,
-            user: proccess.env.db_user,
-            password: proccess.env.db_pass,
-            database: proccess.env.db_db
+        this.coon = mysql.createConnection({
+            host: process.env.db_server,
+            user: process.env.db_user,
+            password: process.env.db_pass,
+            database: process.env.db_db
         });
 
-        coon.connect((err) => {
-            if (err) return false;
+        this.coon.connect((err) => {
+            if (err) {
+                console.error('Error connecting to database: ' + err.stack);
+                return;
+            }
 
-            console.log('Conectado com sucesso');
-
-            return coon;
+            console.log('Connected to database with threadId: ' + this.coon.threadId);
         });
     }
-
 }
 
 
