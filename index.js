@@ -2,10 +2,13 @@ const puppeteer = require('puppeteer');
 const XLSX = require('xlsx');
 const env = require('dotenv').config();
 const mysql = require('mysql');
+const Insert = require('./queryes/insert.js');
+
 
 //LOGGER
 const Logger = require('./logger');
 const logger = new Logger();
+
 
 const weblink = process.env.LINK;
 const link = XLSX.readFile(process.env.EXCEL);
@@ -51,6 +54,11 @@ arr = Object.values(data);
       const newPage = await browser.pages().then(page => page[page.length - 1]);
 
       if (newPage != null) {
+	const insert = new Insert(data);
+	if(insert)
+	{
+	  //TODO ver aq se vai retornar os dados certo do insert
+        }
         logger.info('Pagina aberta com sucesso');
 
       }
@@ -59,8 +67,7 @@ arr = Object.values(data);
       }
       const result = await newPage.evaluate(async () => {
 
-
-        const valor = document.querySelector("#val").innerText;
+	const valor1 = document.querySelector("#val").innerText;
         const valor2 = document.querySelector("#val2").innerText;
         const valor3 = document.querySelector("#val3").innerText;
 
