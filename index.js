@@ -5,7 +5,7 @@ const mysql = require('mysql');
 const Insert = require('./querys/insert.js');
 const createDB = require('./querys/createdb.js');
 
-//LOGGER
+//LOGGER  
 const Logger = require('./logger.js');
 
 
@@ -24,18 +24,18 @@ const arr = Object.values(data);
   const page = await browser.newPage();
   const logger = new Logger();
 
-  const coon = await mysql.createConnection({
-    host: process.env.db_server,
-    user: process.env.db_user,
-    password: process.env.db_pass,
-    database: process.env.db_db
-  });
+  // const coon = await mysql.createConnection({
+  //   host: process.env.db_server,
+  //   user: process.env.db_user,
+  //   password: process.env.db_pass,
+  //   database: process.env.db_db
+  // });
 
-  coon.connect((err) => {
-    if (err) throw err;
+  // coon.connect((err) => {
+  //   if (err) throw err;
 
-    console.log('Conectou: ');
-  });
+  //   console.log('Conectou: ');
+  // });
 
   // Navegar até a página desejada
   // ALGO COM swal2-title e swal2-content
@@ -43,7 +43,7 @@ const arr = Object.values(data);
     if (data) {
 
       await page.goto(weblink, { waitUntil: 'networkidle2' });
-      process.env.CPF = data.CPF;
+      // process.env.CPF = data.CPF;
 
       await page.type('#name', "matheus dias");
       await page.type("#cpf", process.env.CPF);
@@ -93,35 +93,34 @@ const arr = Object.values(data);
 	  //TODO ver aq se vai retornar os dados certo do insert
         logger.info('Pagina aberta com sucesso');
         
-        const result = await newPage.evaluate(async () => {
+        const tags = await newPage.$$('div');
 
-          const valor1 = document.querySelector("#val");
-          const valor2 = document.querySelector("#val2");
-          const valor3 = document.querySelector("#val3");
+        tags.forEach((tag) => {
+          const tagNames = tag.classList;
+          tagNames.forEach(tagName => {
+            console.log(tagName);
+          })
 
-          const tags = await newPage.$$('div');
-          
-          const data = {'valor1': valor1, 'valor2': valor2, 'valor3': valor3, 'tags': tags};
 
-          if (data)
-          {
-            // coon.query('INSERT into clientes SET ?', data, (err, results, fields) => {
-            //   if (err) {
-            //     return coon.rollback(() => {
-            //       logger.error('Deu erro');
-            //       throw err;
-            //     });
-            //   }
-            //   else {
-            //     console.log('goi');
-            //   }
-            // })
+
+        // const result = await newPage.evaluate(async () => {});
+
+        // coon.query('INSERT into clientes SET ?', data, (err, results, fields) => {
+        //   if (err) {
+        //     return coon.rollback(() => {
+        //       logger.error('Deu erro');
+        //       throw err;
+        //     });
+        //   }
+        //   else {
+        //     console.log('goi');
+        //   }
+        // })
             const insert = new Insert(data);
 
             if(insert) {
               return true;
             }
-          }
 
         });
       }
