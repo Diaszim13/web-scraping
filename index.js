@@ -20,7 +20,7 @@ const arr = Object.values(data);
 
 (async () => {
   // Inicializar o Puppeteer
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({ headless: false});
   const page = await browser.newPage();
   const logger = new Logger();
 
@@ -87,7 +87,8 @@ const arr = Object.values(data);
         // page.click("#btn-simulation"),
       ]);
 
-      const newPage = await browser.pages().then(page => page[page.length - 1]);
+      const pages = await browser.pages();
+      const newPage = pages[pages.length - 1];
 
       if (newPage != null) {
 	  //TODO ver aq se vai retornar os dados certo do insert
@@ -95,34 +96,12 @@ const arr = Object.values(data);
         
         const tags = await newPage.$$('div');
 
-        tags.forEach((tag) => {
-          const tagNames = tag.classList;
-          tagNames.forEach(tagName => {
-            console.log(tagName);
-          })
-
-
-
-        // const result = await newPage.evaluate(async () => {});
-
-        // coon.query('INSERT into clientes SET ?', data, (err, results, fields) => {
-        //   if (err) {
-        //     return coon.rollback(() => {
-        //       logger.error('Deu erro');
-        //       throw err;
-        //     });
-        //   }
-        //   else {
-        //     console.log('goi');
-        //   }
-        // })
-            const insert = new Insert(data);
-
-            if(insert) {
-              return true;
-            }
-
-        });
+          tags.forEach((tag) => {
+            const tagNames = tag.classList;
+            tagNames.forEach(tagName => {
+              console.log(tagName);
+            });
+        })
       }
       else {
         logger.error('Pagina não aberta');
