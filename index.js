@@ -3,8 +3,6 @@ const puppeteer = require('puppeteer');
 const XLSX = require('xlsx');
 const env = require('dotenv').config();
 const mysql = require('mysql');
-const Insert = require('./querys/insert.js');
-const createDB = require('./querys/createdb.js');
 
 //LOGGER  
 const Logger = require('./logger.js');
@@ -63,8 +61,10 @@ const arr = Object.values(data);
 
 (async () => {
   // Inicializar o Puppeteer
-  const browser = await puppeteer.launch({ headless: false});
+  // executablePath: `C:\Program Files\Google\Chrome\Application\chrome.exe`
+  const browser = await puppeteer.launch({ headless: false  });
   const page = await browser.newPage();
+  await page.setDefaultNavigationTimeout(0);
   const logger = new Logger();
 
   // const coon = await mysql.createConnection({
@@ -85,7 +85,7 @@ const arr = Object.values(data);
   for (const data of arr) {
     if (data) {
 
-      await page.goto(weblink, { waitUntil: 'networkidle2' });
+      await page.goto(weblink, { waitUntil: 'networkidle2', timeout: 0 });
       // process.env.CPF = data.CPF;
 
       await page.type('#name', "matheus dias");
@@ -105,60 +105,48 @@ const arr = Object.values(data);
       // @ts-ignore
       const checkbox = await page.$eval("#term", input => input.value);
 
-      let vals = {
-        "nome": name,
-        "cpf": cpf,
-        "celular": whats,
-        "data_nascimento": aniversario
-      }
-
-      await page.click("#btn-simulation");
-
       await Promise.all([
-        page.waitForNavigation(),      
-        // coon.query('INSERT into clientes SET ?', vals, (err, results, fields) => {
-        //   if (err) {
-        //     return coon.rollback(() => {
-        //       logger.error('Deu erro');
-        //       throw err;
-        //     });
-        //   }
-        //   else {
-        //     console.log('goi');
-        //   }
-        // })
-        // page.click("#btn-simulation"),
+        page.click("#btn-simulation"),
+        page.waitForNavigation(),
       ]);
 
       const pages = await browser.pages();
       const newPage = pages[pages.length - 1];
-
+      await newPage.setDefaultNavigationTimeout(0);
+      console.table(newPage);
       if (newPage != null) {
 	  //TODO ver aq se vai retornar os dados certo do insert
         logger.info('Pagina aberta com sucesso');
         
-        await Promise.all(
-          [
-            newPage.waitForNavigation({ waitUntil: 'load'}),
-          ]
-        )
+        // await Promise.all(
+        //   [
+        //     newPage.waitForNavigation(),
+        //   ]
+        // )
 
-        const tableParcLabel = await newPage.$("#table-parcLabel");
+        //TODO uma forma para fazer isso vai ser usando if quando recebe uma entrada em alguma coisa
+        if(await newPage.$("#template-result"))
+        {
+          const tableParcLabel = await newPage.$("#table-parcLabel");
+  
+          if(await newPage.$("#table-parcLabel"))
+          {
+            const values = await newPage.evaluate(() => {
+              return {
+                'pagamento': register.febrabanId,
+                'Quantidade parcelas': register.qtdParc
+                , 'total de credito liberado': register.totalCreditLiberty,
+                'VALOR DO EMPRESTIMO': register.totalCreditAccountFGTS
+              };
+            });
+            logger.info(values);
+          }
+          else {
+            logger.error('Não foi possivel encontrar para o cliente: ' + data.nome);
+          }
 
+        }
         
-
-        const variableValue = await page.evaluate(() => {
-          return {
-            'pagamento': register.febrabanId,
-            'Quantidade parcelas': register.qtdParc
-            , 'total de credito liberado': register.totalCreditLiberty,
-            'VALOR DO EMPRESTIMO': register.totalCreditAccountFGTS
-          };
-        });
-
-        
-        
-
         if (febrabanId)
         {
           
