@@ -1,0 +1,355 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>404 promotora | Condições de crédito</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="/v2/lib/fontawesome-free-6.1.1-web/css/all.css" rel="stylesheet">
+<!--<script src="/v2/lib/fontawesome-free-6.1.1-web/js/all.js"></script>-->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ejs@3.1.8/ejs.min.js"></script>
+<script src="/v2/simulation/multi-simulation-v1/script/service/api.js?v2"></script>
+<script src="/v2/simulation/multi-simulation-v1/script/mask.js"></script>
+
+<link href="/v2/simulation/multi-simulation-v1/styles/styles.css" rel="stylesheet">
+
+
+
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4PJ0QS62ZD"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-4PJ0QS62ZD');
+</script>
+    <script src="/v2/simulation/multi-simulation-v1/script/mask.js"></script>
+    <style>
+        body{
+            font-family: 'Roboto', sans-serif;
+        }
+    </style>
+</head>
+<body>
+<div class="progress">
+    <div class="progress-bar bg-success" role="progressbar"
+         style="width: 50%" aria-valuenow="50"
+         aria-valuemin="0" aria-valuemax="100"
+    >
+    </div>
+</div>
+<div class="container">
+    
+<div class="text-right mt-4 mb-4 p-4">
+    <div id="logo-enterprise">
+        <div class="row">
+            <div class="col">
+                <img src="https://storage.googleapis.com/simulador-fgts/logo/sander-202713.png" alt="404 promotora" height="80px" />
+            </div>
+            <div class="col text-end">
+                <p class="m-0 p-0">404 promotora</p>
+                <p class="m-0 p-0">37.046.705/0001-50</p>
+                <a href="https://wa.me/5548996673647?text=Olá gostaria de tirar uma duvida sobre *Antecipação FGTS*" class="btn btn-success btn-md rounded-pill" target="_blank">
+                    <i class="fa-brands fa-whatsapp"></i> Atendimento
+                </a>
+            </div>
+        </div>
+    </div>
+</div>    <div class="card border-0">
+        <div class="card-header bg-white border-0">
+            <h2 class="m-0">Localizamos algumas ofertas</h2>
+            <p class="m-0">Agora, basta você escolher qual a melhor oferta</p>
+        </div>
+        <div class="card-body">
+            <script id="template-result" type="text/html">
+                <% results.map((register, key) => { %>
+                    <div>
+                        <img src="/v2/assets/banks/<%=register.febrabanId%>.png" alt="<%=register.nameBank%>" />
+                        <div>
+                            <span class="badge bg-success">
+                                <%=(register.febrabanId === '329' || register.febrabanId === '329-1') ? 'PAGAMENTO POR PIX' : 'PAGAMENTO POR DEPÓSITO EM CONTA'%>
+                            </span>
+                        </div>
+                        <% if(register.status){ %>
+                        <div class="result-simulation-bank row bg-light rounded rounded-3 mb-4 p-4">
+    <div class="col-md-3">
+        <p class="m-0 pt-3">Parcelas</p>
+        <h3 class="m-0 pb-3"><%=register.qtdParc%> anos</h3>
+    </div>
+    <div class="col-md-3">
+        <p class="m-0 pt-3">Valor total do empréstimo</p>
+        <h3 class="m-0 pb-3">R$ <%=maskMoney(register.totalCreditAccountFGTS.toFixed(2))%></h3>
+    </div>
+    <div class="col-md-3">
+        <p class="m-0 pt-3">Valor total Liberado</p>
+        <h3 class="m-0 pb-3">R$ <%=maskMoney(register.totalCreditLiberty.toFixed(2))%></h3>
+    </div>
+    <div class="col-md-3 text-center">
+        <button id="eu-quero-<%=register.febrabanId%>" class="btn btn-warning mt-3 rounded-pill w-100" onclick="simulation.handleSelectSimulation(<%=key%>)">EU QUERO</button>
+        <button class="btn btn-link text-secondary mt-1 btn-sm w-100" onclick="simulation.handleShowTableParc(<%=key%>)">VER PARCELAS</button>
+    </div>
+</div>                        <%} else {%>
+                        <div class="mb-4">
+                            <%
+                            if(
+                            register.message === 'Instituição Fiduciária não possui autorização do Trabalhador para Operação Fiduciária. (7)' ||
+                            register.message === 'Instituição Fiduciária não possui autorização do Trabalhador para Operação Fiduciária.' ||
+                            register.message === 'Caixa Econômica Informa: Instituição Fiduciária não possui autorização do Trabalhador para Operação Fiduciária.'
+                            ){
+                            %>
+                            <div class="alert alert-success mt-3">
+                                <button class="btn btn-warning float-end rounded-pill " onclick="document.location.reload()" style="top:0">Simular novamente</button>
+                                <%
+                                if(register.febrabanId === '329'){
+                                %>
+                                <h4 class=" mt-2"><i class="fa-regular fa-square-check"></i> <small>Libere no aplicativo do FGTS as financeiras:</small>  </h4>
+                                <p class="m-0">
+                                    - DELCRED SOCIEDADE DE CRÉDITO DIRETO S.A.<br />
+                                    - QI SOCIEDADE DE CREDITO DIRETO S.A.
+                                </p>
+                                <p class="mt-2 mb-2 font-weight-bold">É obrigatória a liberação de ambas financeiras, no aplicativo do FGTS.</p>
+                                <%
+                                } else {
+                                %>
+                                <h4 class=" mt-2 mb-2"><i class="fa-regular fa-square-check"></i> <small>Libere no aplicativo do FGTS a financeira:</small> <%=register.nameBank%></h4>
+                                <%
+                                }
+                                %>
+                            </div>
+                            <%
+                            }
+                            %>
+                            <div class="alert alert-danger">
+                                <div class="row">
+                                    <div class="col-md-8 pt-3">
+                                        <i class="fa-solid fa-xmark fa-2xl"></i> <%=register.message%>
+                                    </div>
+                                    <div class="col-md-4 text-right">
+                                        <a class="btn btn-success rounded-pill float-end m-1" href="https://wa.me/55<%=numberWhatsapp%>" target="_blank">
+                                            <i class="fa-brands fa-whatsapp"></i>  ATENDIMENTO
+                                        </a>
+                                        <button class="btn btn-link rounded-pill float-end m-1"  data-bs-toggle="modal"
+                                                data-bs-target="#modal-fluxo-capacitacao">COMO LIBERAR O SAQUE ANIVERSÁRIO?</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <% } %>
+                    </div>
+                <% }) %>
+            </script>
+            <div id="view">
+                <div class='alert bg-light text-center'>
+                    <i class="fa fa-spinner fa-3x fa-spin"></i>
+                    <h3 class="m-0">Carregando as melhores condições de crédito!</h3>
+                    <p>Por favor, aguarde!</p>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer text-center border-0 bg-white">
+            <a href="/page/fgts/simulation/stage-1/indication/8e1f0c6f-aa60-4da3-a07b-47954e147634" id="btn-back-simulation" class="btn btn-link text-secondary btn-lg">
+                <i class="fa-solid fa-arrow-left-long"></i> VOLTAR
+            </a>
+        </div>
+    </div>
+
+    
+    <!-- Modal  -->
+    <div class="modal fade" id="selected-condition" tabindex="-1" aria-labelledby="selected-conditionLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg rounded-3">
+            <div class="modal-content">
+                <div class="modal-body p-5">
+                    <h2 class="m-0">Confirmação</h2>
+                    <p class="m-0">Você selecionou a simulação abaixo:</p>
+                    <script id="template-selected-condition" type="text/html">
+                        <img src="/v2/assets/banks/<%=register.febrabanId%>.png" alt="<%=register.nameBank%>" />
+                        <span class="badge bg-success"><%=(register.febrabanId === '329' || register.febrabanId === '329-1') ? 'PAGAMENTO POR PIX' : 'PAGAMENTO POR DEPÓSITO EM CONTA'%></span>
+                        <div class="result-simulation-bank row bg-light rounded rounded-3 mb-4 p-4">
+                            <div class="col-md-4">
+                                <p class="m-0 pt-3">Parcelas</p>
+                                <h3 class="m-0 pb-3"><%=register.qtdParc%> anos</h3>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="m-0 pt-3">Valor total do empréstimo</p>
+                                <h3 class="m-0 pb-3">R$ <%=maskMoney(register.totalCreditAccountFGTS.toFixed(2))%></h3>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="m-0 pt-3">Valor total Liberado</p>
+                                <h3 class="m-0 pb-3">R$ <%=maskMoney(register.totalCreditLiberty.toFixed(2))%></h3>
+                            </div>
+                        </div>
+                    </script>
+                    <div id="view-selected-condition"></div>
+                    <div class="mt-5 text-center">
+                        <button id="btn-bank-selected" class="btn btn-warning rounded-pill w-50 btn-lg">CONTINUAR</button>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <a id="btn-close" data-bs-dismiss="modal" aria-label="Close" class="btn btn-link text-secondary btn-lg">
+                            <i class="fa-solid fa-arrow-left-long"></i> SAIR
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="table-parc" tabindex="-1" aria-labelledby="table-parcLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg rounded-3">
+            <div class="modal-content">
+                <div class="modal-body p-5">
+                    <h2 class="m-0">Parcelas</h2>
+                    <p class="m-0">Abaixo, você pode visualizar as parcelas do contrato:</p>
+                    <script id="template-table-parc" type="text/html">
+                        <img src="/v2/assets/banks/<%=register.febrabanId%>.png" alt="<%=register.nameBank%>" />
+                        <span class="badge bg-success"><%=(register.febrabanId === '329' || register.febrabanId === '329-1') ? 'PAGAMENTO POR PIX' : 'PAGAMENTO POR DEPÓSITO EM CONTA'%></span>
+                        <div class="result-simulation-bank row bg-light rounded rounded-3 mb-4 p-4">
+                            <div class="col-md-4">
+                                <p class="m-0 pt-3">Parcelas</p>
+                                <h3 class="m-0 pb-3"><%=register.qtdParc%> anos</h3>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="m-0 pt-3">Valor total do empréstimo</p>
+                                <h3 class="m-0 pb-3">R$ <%=maskMoney(register.totalCreditAccountFGTS.toFixed(2))%></h3>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="m-0 pt-3">Valor total Liberado</p>
+                                <h3 class="m-0 pb-3">R$ <%=maskMoney(register.totalCreditLiberty.toFixed(2))%></h3>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <h3>Parcelas</h3>
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                <tr>
+                                    <th>PARCELA</th>
+                                    <th>VENCIMENTO</th>
+                                    <th>VALOR</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <% register.totalParc.map((parc, idx) => { %>
+                                <tr>
+                                    <td><%=parc.parc%></td>
+                                    <td><%=parc.date%></td>
+                                    <td>R$ <%=maskMoney(parseFloat(parc.value).toFixed(2))%></td>
+                                </tr>
+                                <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </script>
+                    <div id="view-table-parc"></div>
+                    <div class="mt-5 text-center">
+                        <button id="btn-person-data" class="btn btn-warning rounded-pill w-50 btn-lg">CONTINUAR COM MEUS DADOS</button>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <a id="btn-close" data-bs-dismiss="modal" aria-label="Close" class="btn btn-link text-secondary btn-lg">
+                            <i class="fa-solid fa-arrow-left-long"></i> SAIR
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modal-fluxo-capacitacao" tabindex="-1" aria-labelledby="modal-fluxo-capacitacaoLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-body p-0">
+                <div class="card">
+                    <div class="card-header bg-white border-0">
+                        <h1 class="m-0"><small>Como ativar a antecipação do</small> Saque Aniversário</h1>
+                    </div>
+                    <div class="card-body bg-white p-3">
+                        <div class="row">
+                            <div class="col-md-4 p-5">
+                                <img src="/v2/assets/tutorial/fgts1/download-app-fgts-googleplay.png" width="100%" alt="Aplicativo FGTS - Google Play" class="mb-3" />
+                                <h3>1. Baixe o aplicativo do FGTS em seu celular!</h3>
+                                <p>Clique nas imagens abaixo para instalar o aplicativo do FGTS em seu celular.</p>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <a href="https://play.google.com/store/apps/details?id=br.gov.caixa.fgts.trabalhador" target="_blank">
+                                            <img src="/v1/image/app-google.png" width="100%" alt="Google Play" />
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="https://apps.apple.com/br/app/fgts/id1038441027">
+                                            <img src="/v1/image/app-ios.png" width="100%" alt="App Store" />
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 p-5">
+                                <img src="/v2/assets/tutorial/fgts1/autorizar-saque-aniversario.png" width="100%" alt="Autorize o saque aniversário" class="mb-3" />
+                                <h3>2. Autorize o Saque-Aniversário</h3>
+                                <p>Após acessar o aplicativo do FGTS em seu celular, clique no botão Saque-Aniversário do FGTS para habilitar o serviço.</p>
+                            </div>
+                            <div class="col-md-4 p-5">
+                                <img src="/v2/assets/tutorial/fgts1/ler-termo-uso-fgts.png" width="100%" alt="Aceite os termos para habilitar a consulta" class="mb-3" />
+                                <h3>3. Aceite os termos, para habilitar a consulta</h3>
+                                <p>Agora, leia os termos e as condições do serviço. Em seguida, clique sobre o botão continuar.</p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 p-5">
+                                <img src="/v2/assets/tutorial/fgts1/selecionar-financeira.png" width="100%" alt="Adicionar instituição financeira" class="mb-3" />
+                                <h3>4. Adicionar instituição financeira</h3>
+                                <p>Selecione a instituição financeira na qual deseja realizar a antecipação do Saque-Aniversário.</p>
+                            </div>
+                            <div class="col-md-4 p-5">
+                                <img src="/v2/assets/tutorial/fgts1/autorizar-bancos.png" width="100%" alt="Adicionar instituição financeira" class="mb-3" />
+                                <h3>5. Selecione os bancos abaixo</h3>
+                                <ul>
+                                    <li>Banco PAN S.A.</li>
+                                    <li>Banco J. Safra S.A.</li>
+                                    <li>Banco C6 Consignado S.A.</li>
+                                    <li>Facta Financeira S.A.</li>
+                                    <li>Banco Mercantil do Brasil S.A.</li>
+                                    <li>QI SOCIEDADE DE CREDITO DIRETO S.A.</li>
+                                    <li>BANCO BMG S.A.</li>
+                                    <li>CAPITAL CONSIG SOCIEDADE DE CRÉDITO DIRETO S.A.</li>
+                                </ul>
+                                <p>Em seguida, autorize a consulta.</p>
+                            </div>
+                            <div class="col-md-4 p-5">
+                                <img src="/v2/assets/tutorial/fgts1/sucesso-liberacao-bancos.png" width="100%" alt="Pronto! Continuar" class="mb-3" />
+                                <h3>6. Pronto!</h3>
+                                <p>A partir de agora, você poderá realizar suas simulações de crédito nas melhores instituições financeiras do Brasil. Antecipe seu saldo FGTS agora mesmo!</p>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button class="btn btn-warning rounded-pill w-50 btn-lg" onclick="reloadPage()">Simular novamente</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const reloadPage = () => {
+        document.location.reload()
+    }
+</script><script src="/v2/simulation/multi-simulation-v1/script/simulation/simulation-stage2.js"></script>
+<script>
+    const simulation = new SimulationStage2('71ca85bd-f41f-4ae5-90a4-63fb7302471f', '29565f09-fa6b-4eb1-ad2b-a5c3d80e9a9d', '48996673647', '8e1f0c6f-aa60-4da3-a07b-47954e147634');
+    simulation.setMinimal('');
+</script>
+
+</body>
+</html>
