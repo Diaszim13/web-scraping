@@ -21,12 +21,12 @@ Assim vem no html os campos que preciso
     <h3 class="m-0 pb-3"><%=register.qtdParc%> anos</h3>
 </div>
 <div class="col-md-4">
-	<p class="m-0 pt-3">Valor total do empréstimo</p>
-	<h3 class="m-0 pb-3">R$ <%=maskMoney(register.totalCreditAccountFGTS.toFixed(2))%></h3>
+  <p class="m-0 pt-3">Valor total do empréstimo</p>
+  <h3 class="m-0 pb-3">R$ <%=maskMoney(register.totalCreditAccountFGTS.toFixed(2))%></h3>
 </div>
 <div class="col-md-4">
-	<p class="m-0 pt-3">Valor total Liberado</p>
-	<h3 class="m-0 pb-3">R$ <%=maskMoney(register.totalCreditLiberty.toFixed(2))%></h3>
+  <p class="m-0 pt-3">Valor total Liberado</p>
+  <h3 class="m-0 pb-3">R$ <%=maskMoney(register.totalCreditLiberty.toFixed(2))%></h3>
 </div>
 
 
@@ -61,24 +61,26 @@ const arr = Object.values(data);
 
 (async () => {
   // Inicializar o Puppeteer
-  // executablePath: `C:\Program Files\Google\Chrome\Application\chrome.exe`
-  const browser = await puppeteer.launch({ headless: false  });
+  // executablePath: `C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe`
+  //C:\\Users\\mathe\\AppData\\Local\\Programs\\Opera\\launcher.exe
+  const browser = await puppeteer.launch({ headless: false, executablePath: `C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe` });
+
   const page = await browser.newPage();
   await page.setDefaultNavigationTimeout(0);
   const logger = new Logger();
 
-  // const coon = await mysql.createConnection({
-  //   host: process.env.db_server,
-  //   user: process.env.db_user,
-  //   password: process.env.db_pass,
-  //   database: process.env.db_db
-  // });
+  const coon = await mysql.createConnection({
+    host: process.env.db_server,
+    user: process.env.db_user,
+    password: process.env.db_pass,
+    database: process.env.db_db
+  });
 
-  // coon.connect((err) => {
-  //   if (err) throw err;
+  coon.connect((err) => {
+    if (err) throw err;
 
-  //   console.log('Conectou: ');
-  // });
+    console.log('Conectou: ');
+  });
 
   // Navegar até a página desejada
   // ALGO COM swal2-title e swal2-content
@@ -88,10 +90,15 @@ const arr = Object.values(data);
       await page.goto(weblink, { waitUntil: 'networkidle2', timeout: 0 });
       // process.env.CPF = data.CPF;
 
-      await page.type('#name', "matheus dias");
-      await page.type("#cpf", process.env.CPF);
+      let dados = {
+        nome: data['NOME'],
+        cpf: data['CPF'],
+        celular: data['CELULAR']
+      }
+      await page.type('#name', dados["nome"]);
+      await page.type("#cpf", dados['cpf']);
       await page.type("#birthDate", "20/05/2000");
-      await page.type("#whatsappNumber", arr[0].CELULAR);
+      await page.type("#whatsappNumber", dados['celular']);
       await page.click("#term");
 
       // @ts-ignore
@@ -106,73 +113,99 @@ const arr = Object.values(data);
       const checkbox = await page.$eval("#term", input => input.value);
 
       await Promise.all([
-        page.click("#btn-simulation"),
-        page.waitForNavigation(),
+      page.click("#btn-simulation")
       ]);
+
+
+      try {
+        await Promise.all([
+          page.waitForSelector(".swal2-x-mark", { timeout: 5000 })
+        ],
+        // { waitUntil: 'networkidle2', timeout: 0 }
+        );
+        const err = await page.evaluate(() => {
+          return document.querySelector(".swal2-x-mark");
+        });
+        
+        if (err != null) {
+          logger.error('Não foi possivel encontrar para o cliente: ' + data.nome);
+        }
+        continue;
+
+        // if (await page.$eval(".swal2-x-mark", element => element.textContent) !== null) {
+        //   logger.error('Não foi possivel encontrar para o cliente: ' + data.nome);
+        // }
+      } catch(Exception) {
+        page.waitForNavigation(),
+        logger.info('Pagina aberta com sucesso');
+      }
+      
+
 
       const pages = await browser.pages();
       const newPage = pages[pages.length - 1];
       await newPage.setDefaultNavigationTimeout(0);
       console.table(newPage);
       if (newPage != null) {
-	  //TODO ver aq se vai retornar os dados certo do insert
+        //TODO ver aq se vai retornar os dados certo do insert
         logger.info('Pagina aberta com sucesso');
-        
-        // await Promise.all(
-        //   [
-        //     newPage.waitForNavigation(),
-        //   ]
-        // )
 
+        await Promise.all(
+          [
+            newPage.waitForSelector('#template-result', {timeout: 0}),
+          ]
+        )
         //TODO uma forma para fazer isso vai ser usando if quando recebe uma entrada em alguma coisa
-        if(await newPage.$("#template-result"))
-        {
-          const tableParcLabel = await newPage.$("#table-parcLabel");
-  
-          if(await newPage.$("#table-parcLabel"))
-          {
+        if (await newPage.$eval("#template-result", element => element.textContent) !== null) {
+
+          await Promise.all([
+            newPage.waitForSelector('#table-parcLabel', {timeout: 0}),
+          ]);
+
+          if (await newPage.$eval("#table-parcLabel") != null) {
             const values = await newPage.evaluate(() => {
-              return {
-                'pagamento': register.febrabanId,
-                'Quantidade parcelas': register.qtdParc
-                , 'total de credito liberado': register.totalCreditLiberty,
-                'VALOR DO EMPRESTIMO': register.totalCreditAccountFGTS
-              };
+              let data = [];
+              const tags = document.querySelectorAll('#table-parcLabel');
+              for (const tag of $i => tags) {
+                data.push(tag.register.febrabanId);
+                data.push(tag.register.qtdParc);
+                data.push(tag.register.totalCreditLiberty);
+                data.push(tag.register.totalCreditAccountFGTS);
+              }
             });
-            logger.info(values);
+            logger.info(data);
+
+            //TODO fazer o insert no banco
+            const sql = "INSERT INTO `simulacao` set ?";
+            for (dt of data) {
+              coon.query(sql, dt, (err, results, fields) => {
+                if (err) {
+                  return coon.roolback(() => {
+                    this.logger.error('Deu erro');
+                    throw err;
+                  });
+                };
+
+                coon.commit((err) => {
+                  if (err) {
+                    return coon.roolback(() => {
+                      this.logger.error('Deu erro');
+                      throw err;
+                    });
+                  }
+                  this.logger.info('Cadastrado com sucesso!');
+                  console.log('success!');
+                });
+
+                logger.info("Cadastrado com sucesso: " + results.insertId);
+              })
+            }
           }
           else {
             logger.error('Não foi possivel encontrar para o cliente: ' + data.nome);
           }
-
-        }
-        
-        if (febrabanId)
-        {
-          
         }
 
-        console.log(variableValue);
-
-
-        if (tableParcLabel != null)
-        {
-          const content = await newPage.$eval(el => el.textContent, element);
-
-          if (content)
-          {
-            logger.info(content);  
-          }
-        }
-
-        // for (let tag in tags)
-        // {
-        //   const tagNames = tag.classList;
-        //   // if() {}
-        //   tagNames.forEach(tagName => {
-        //     console.log(tagName);
-        //   });
-        // }
       }
       else {
         logger.error('Pagina não aberta');
