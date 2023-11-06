@@ -2,7 +2,6 @@
 const puppeteer = require('puppeteer');
 const XLSX = require('xlsx');
 const env = require('dotenv').config();
-const mysql = require('mysql');
 
 //LOGGER  
 const Logger = require('./logger.js');
@@ -69,24 +68,15 @@ const arr = Object.values(data);
   await page.setDefaultNavigationTimeout(0);
   const logger = new Logger();
 
-  const coon = await mysql.createConnection({
-    host: process.env.db_server,
-    user: process.env.db_user,
-    password: process.env.db_pass,
-    database: process.env.db_db
-  });
-
-  coon.connect((err) => {
-    if (err) throw err;
-
-    console.log('Conectou: ');
-  });
 
   // Navegar até a página desejada
   // ALGO COM swal2-title e swal2-content
   for (const data of arr) {
     if (data) {
-
+      if (!browser.isConnected()) {
+        logger.info('Pagina fechada com sucesso');
+        return false;
+      }
       await page.goto(weblink, { waitUntil: 'networkidle2', timeout: 0 });
       // process.env.CPF = data.CPF;
 
@@ -101,19 +91,8 @@ const arr = Object.values(data);
       await page.type("#whatsappNumber", dados['celular']);
       await page.click("#term");
 
-      // @ts-ignore
-      const name = await page.$eval("#name", input => input.value);
-      // @ts-ignore
-      const cpf = await page.$eval("#cpf", input => input.value);
-      // @ts-ignore
-      const aniversario = await page.$eval("#birthDate", input => input.value);
-      // @ts-ignore
-      const whats = await page.$eval("#whatsappNumber", input => input.value);
-      // @ts-ignore
-      const checkbox = await page.$eval("#term", input => input.value);
-
       await Promise.all([
-      page.click("#btn-simulation")
+        page.click("#btn-simulation")
       ]);
 
 
@@ -121,25 +100,30 @@ const arr = Object.values(data);
         await Promise.all([
           page.waitForSelector(".swal2-x-mark", { timeout: 5000 })
         ],
-        // { waitUntil: 'networkidle2', timeout: 0 }
+          // { waitUntil: 'networkidle2', timeout: 0 }
         );
         const err = await page.evaluate(() => {
           return document.querySelector(".swal2-x-mark");
         });
-        
+
         if (err != null) {
           logger.error('Não foi possivel encontrar para o cliente: ' + data.nome);
+        }
+        if (!browser.isConnected()) {
+          logger.info('Pagina fechada com sucesso');
+          return false;
         }
         continue;
 
         // if (await page.$eval(".swal2-x-mark", element => element.textContent) !== null) {
         //   logger.error('Não foi possivel encontrar para o cliente: ' + data.nome);
         // }
-      } catch(Exception) {
+
+      } catch (Exception) {
         page.waitForNavigation(),
-        logger.info('Pagina aberta com sucesso');
+          logger.info('Pagina aberta com sucesso');
       }
-      
+
 
 
       const pages = await browser.pages();
@@ -152,59 +136,15 @@ const arr = Object.values(data);
 
         await Promise.all(
           [
-            newPage.waitForSelector('#template-result', {timeout: 0}),
+            newPage.waitForSelector('#template-result', { timeout: 0 }),
           ]
         )
-        //TODO uma forma para fazer isso vai ser usando if quando recebe uma entrada em alguma coisa
         if (await newPage.$eval("#template-result", element => element.textContent) !== null) {
-
-          await Promise.all([
-            newPage.waitForSelector('#table-parcLabel', {timeout: 0}),
-          ]);
-
-          if (await newPage.$eval("#table-parcLabel") != null) {
-            const values = await newPage.evaluate(() => {
-              let data = [];
-              const tags = document.querySelectorAll('#table-parcLabel');
-              for (const tag of $i => tags) {
-                data.push(tag.register.febrabanId);
-                data.push(tag.register.qtdParc);
-                data.push(tag.register.totalCreditLiberty);
-                data.push(tag.register.totalCreditAccountFGTS);
-              }
-            });
-            logger.info(data);
-
-            //TODO fazer o insert no banco
-            const sql = "INSERT INTO `simulacao` set ?";
-            for (dt of data) {
-              coon.query(sql, dt, (err, results, fields) => {
-                if (err) {
-                  return coon.roolback(() => {
-                    this.logger.error('Deu erro');
-                    throw err;
-                  });
-                };
-
-                coon.commit((err) => {
-                  if (err) {
-                    return coon.roolback(() => {
-                      this.logger.error('Deu erro');
-                      throw err;
-                    });
-                  }
-                  this.logger.info('Cadastrado com sucesso!');
-                  console.log('success!');
-                });
-
-                logger.info("Cadastrado com sucesso: " + results.insertId);
-              })
-            }
-          }
-          else {
-            logger.error('Não foi possivel encontrar para o cliente: ' + data.nome);
-          }
+          logger.info(data['CPF'] + ' Cadastrado com sucesso!');
         }
+
+
+        continue;
 
       }
       else {
@@ -212,10 +152,10 @@ const arr = Object.values(data);
       }
 
       //await browser.close();
-      setTimeout(() => {
-        browser.close();
-      }, 5000000);
+
     }
   }
-
+  setTimeout(() => {
+    browser.close();
+  }, 5000000);
 })()
