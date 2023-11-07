@@ -24,31 +24,34 @@ const arr = data.map(Object.values);
 
   const logger = new Logger();
   const browser = await puppeteer.launch({ headless: false });
-  const page = await browser.newPage();
 
   // Navegar até a página desejada
   // ALGO COM swal2-title e swal2-content
   for (const data of arr) {
     if (data) {
-      puppeteer.use(RecaptchaPlugin({
+      const page = await browser.newPage();
+      await page.goto(weblink, { waitUntil: 'networkidle0', timeout: 0 });
+
+
+      await puppeteer.use(RecaptchaPlugin({
           provider: { id: '2captcha', token: process.env.recapcha },
           visualFeedback: true // colorize reCAPTCHAs (violet = detected, green = solved)
         })
       );
+      let { captchas } = await page.findRecaptchas()
+      let { solutions } = await page.getRecaptchaSolutions(captchas)
+      let { solved, error } = await page.enterRecaptchaSolutions(solutions)
 
       await page.setDefaultNavigationTimeout(0);
       if (!browser.isConnected()) {
         logger.info('Pagina fechada com sucesso');
         return false;
       }
-      await page.goto(weblink, { waitUntil: 'networkidle2', timeout: 0 });
       // process.env.CPF = data.CPF;
 
       // let val = await page.waitForSelector('#recaptcha-token', { timeout: 0 });
 
-      await Promise.all([
-        page.solveRecaptchas()
-      ]);
+        await page.solveRecaptchas()
       
       let dados = {
         nome: data[0],
