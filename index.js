@@ -1,7 +1,9 @@
 // @ts-nocheck
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-extra');
 const XLSX = require('xlsx');
 const env = require('dotenv').config();
+
+const RecaptchaPlugin = require('puppeteer-extra-plugin-recaptcha');
 
 //LOGGER  
 const Logger = require('./logger.js');
@@ -21,15 +23,19 @@ const arr = data.map(Object.values);
   //C:\\Users\\mathe\\AppData\\Local\\Programs\\Opera\\launcher.exe
 
   const logger = new Logger();
-
+  const browser = await puppeteer.launch({ headless: false });
+  const page = await browser.newPage();
 
   // Navegar até a página desejada
   // ALGO COM swal2-title e swal2-content
   for (const data of arr) {
     if (data) {
-      const browser = await puppeteer.launch({ headless: false, executablePath: `C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe` });
+      puppeteer.use(RecaptchaPlugin({
+          provider: { id: '2captcha', token: process.env.recapcha },
+          visualFeedback: true // colorize reCAPTCHAs (violet = detected, green = solved)
+        })
+      );
 
-      const page = await browser.newPage();
       await page.setDefaultNavigationTimeout(0);
       if (!browser.isConnected()) {
         logger.info('Pagina fechada com sucesso');
@@ -38,6 +44,12 @@ const arr = data.map(Object.values);
       await page.goto(weblink, { waitUntil: 'networkidle2', timeout: 0 });
       // process.env.CPF = data.CPF;
 
+      // let val = await page.waitForSelector('#recaptcha-token', { timeout: 0 });
+
+      await Promise.all([
+        page.solveRecaptchas()
+      ]);
+      
       let dados = {
         nome: data[0],
         cpf: data[1],
@@ -71,7 +83,7 @@ const arr = data.map(Object.values);
         });
 
         if (err != null) {
-          logger.error('Não foi possivel encontrar para o cliente: ' + data.nome);
+          logger.error('Não foi possivel encontrar para o cliente: ' + dados["nome"]);
         }
         if (!browser.isConnected()) {
           logger.info('Pagina fechada com sucesso');
