@@ -52,20 +52,17 @@ Este é o html quando da erro antes de fazer a simulação
 const weblink = process.env.LINK;
 const link = XLSX.readFile(process.env.EXCEL);
 
-const worksheet = link.Sheets[link.SheetNames[1]];
+const worksheet = link.Sheets[link.SheetNames[0]];
 
 const data = XLSX.utils.sheet_to_json(worksheet);
 
-const arr = Object.values(data);
+const arr = data.map(Object.values);
 
 (async () => {
   // Inicializar o Puppeteer
   // executablePath: `C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe`
   //C:\\Users\\mathe\\AppData\\Local\\Programs\\Opera\\launcher.exe
-  const browser = await puppeteer.launch({ headless: false, executablePath: `C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe` });
 
-  const page = await browser.newPage();
-  await page.setDefaultNavigationTimeout(0);
   const logger = new Logger();
 
 
@@ -73,6 +70,10 @@ const arr = Object.values(data);
   // ALGO COM swal2-title e swal2-content
   for (const data of arr) {
     if (data) {
+      const browser = await puppeteer.launch({ headless: false, executablePath: `C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe` });
+
+      const page = await browser.newPage();
+      await page.setDefaultNavigationTimeout(0);
       if (!browser.isConnected()) {
         logger.info('Pagina fechada com sucesso');
         return false;
@@ -81,14 +82,20 @@ const arr = Object.values(data);
       // process.env.CPF = data.CPF;
 
       let dados = {
-        nome: data['NOME'],
-        cpf: data['CPF'],
-        celular: data['CELULAR']
+        nome: data[0],
+        cpf: data[1],
+        nascimento: data[2],
+        celular: data[3]
       }
+
+      const date = new Date(dados['nascimento']);
+
+      const databr = date.toLocaleDateString('pt-BR');
+
       await page.type('#name', dados["nome"]);
-      await page.type("#cpf", dados['cpf']);
-      await page.type("#birthDate", "20/05/2000");
-      await page.type("#whatsappNumber", dados['celular']);
+      await page.type("#cpf", dados['cpf'].toString());
+      await page.type("#birthDate", databr.toString());
+      await page.type("#whatsappNumber", dados['celular'].toString());
       await page.click("#term");
 
       await Promise.all([
@@ -98,7 +105,7 @@ const arr = Object.values(data);
 
       try {
         await Promise.all([
-          page.waitForSelector(".swal2-x-mark", { timeout: 5000 })
+          page.waitForSelector(".swal2-x-mark", { timeout: 10000 })
         ],
           // { waitUntil: 'networkidle2', timeout: 0 }
         );
@@ -113,6 +120,8 @@ const arr = Object.values(data);
           logger.info('Pagina fechada com sucesso');
           return false;
         }
+        await page.close();
+        browser.close();
         continue;
 
         // if (await page.$eval(".swal2-x-mark", element => element.textContent) !== null) {
@@ -125,9 +134,11 @@ const arr = Object.values(data);
       }
 
 
+      browser.on('targetCreated', async target => {
+        const newPage = await target.pages();
+        console.log(newPage.url());
+      });
 
-      const pages = await browser.pages();
-      const newPage = pages[pages.length - 1];
       await newPage.setDefaultNavigationTimeout(0);
       console.table(newPage);
       if (newPage != null) {
@@ -143,9 +154,8 @@ const arr = Object.values(data);
           logger.info(data['CPF'] + ' Cadastrado com sucesso!');
         }
 
-
         continue;
-
+      
       }
       else {
         logger.error('Pagina não aberta');
