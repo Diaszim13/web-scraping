@@ -4,7 +4,10 @@ const XLSX = require('xlsx');
 const env = require('dotenv').config();
 
 const RecaptchaPlugin = require('puppeteer-extra-plugin-recaptcha');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+var userAgent = require('user-agents');
 
+puppeteer.use(StealthPlugin());
 //LOGGER  
 const Logger = require('./logger.js');
 
@@ -30,17 +33,11 @@ const arr = data.map(Object.values);
   for (const data of arr) {
     if (data) {
       const page = await browser.newPage();
-      await page.goto(weblink, { waitUntil: 'networkidle0', timeout: 0 });
+      await page.goto(weblink, { waitUntil: 'networkidle2', timeout: 0 });
+
+      page.setUserAgent('5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36');
 
 
-      await puppeteer.use(RecaptchaPlugin({
-          provider: { id: '2captcha', token: process.env.recapcha },
-          visualFeedback: true // colorize reCAPTCHAs (violet = detected, green = solved)
-        })
-      );
-      let { captchas } = await page.findRecaptchas()
-      let { solutions } = await page.getRecaptchaSolutions(captchas)
-      let { solved, error } = await page.enterRecaptchaSolutions(solutions)
 
       await page.setDefaultNavigationTimeout(0);
       if (!browser.isConnected()) {
@@ -51,13 +48,22 @@ const arr = data.map(Object.values);
 
       // let val = await page.waitForSelector('#recaptcha-token', { timeout: 0 });
 
-        await page.solveRecaptchas()
+        //await page.solveRecaptchas()
       
       let dados = {
         nome: data[0],
         cpf: data[1],
         nascimento: data[2],
         celular: data[3]
+      }
+
+      if(dados['cpf'].length  < 11){
+        for(let i = dados['cpf'].length; i < 11; i++){
+          dados['cpf'] = '0' + dados['cpf'];
+        }
+        // logger.error('CPF invalido: ' + dados['cpf']);
+        // await page.close();
+        // continue;
       }
 
       const date = new Date(dados['nascimento']);
@@ -93,7 +99,7 @@ const arr = data.map(Object.values);
           return false;
         }
         await page.close();
-        browser.close();
+        // browser.close();
         continue;
 
         // if (await page.$eval(".swal2-x-mark", element => element.textContent) !== null) {
@@ -106,10 +112,9 @@ const arr = data.map(Object.values);
       }
 
 
-      browser.on('targetCreated', async target => {
-        const newPage = await target.pages();
-        console.log(newPage.url());
-      });
+      Promise.all([
+        newPage = (await browser.pages())[1]
+      ])
 
       await newPage.setDefaultNavigationTimeout(0);
       console.table(newPage);
@@ -125,12 +130,13 @@ const arr = data.map(Object.values);
         if (await newPage.$eval("#template-result", element => element.textContent) !== null) {
           logger.info(data['CPF'] + ' Cadastrado com sucesso!');
         }
-
         continue;
       
       }
       else {
         logger.error('Pagina não aberta');
+        continue;
+
       }
 
       //await browser.close();
@@ -139,5 +145,5 @@ const arr = data.map(Object.values);
   }
   setTimeout(() => {
     browser.close();
-  }, 5000000);
+  }, 5000);
 })()
