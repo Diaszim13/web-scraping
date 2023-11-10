@@ -4,8 +4,7 @@ const XLSX = require('xlsx');
 const env = require('dotenv').config();
 
 const RecaptchaPlugin = require('puppeteer-extra-plugin-recaptcha');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-var userAgent = require('user-agents');
+const stelphPlugin = require('puppeteer-extra-plugin-stealth');
 
 puppeteer.use(StealthPlugin());
 //LOGGER  
@@ -19,6 +18,7 @@ const worksheet = link.Sheets[link.SheetNames[0]];
 const data = XLSX.utils.sheet_to_json(worksheet);
 
 const arr = data.map(Object.values);
+puppeteer.use(stelphPlugin());
 
 (async () => {
   // Inicializar o Puppeteer
@@ -26,18 +26,36 @@ const arr = data.map(Object.values);
   //C:\\Users\\mathe\\AppData\\Local\\Programs\\Opera\\launcher.exe
 
   const logger = new Logger();
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({ headless: false, args: ['--disable-web-security', '--disable-features=IsolateOrigins,site-per-process'] });
+  let page = await browser.newPage();
 
   // Navegar até a página desejada
   // ALGO COM swal2-title e swal2-content
   for (const data of arr) {
     if (data) {
-      const page = await browser.newPage();
-      await page.goto(weblink, { waitUntil: 'networkidle2', timeout: 0 });
 
-      page.setUserAgent('5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36');
+      await page.evaluateOnNewDocument(() => {
+        Object.defineProperty(navigator, 'platform', {get: () =>  'Win32'})
+        Object.defineProperty(navigator, 'productSub', {get: () =>  '20100101'})
+        Object.defineProperty(navigator, 'vendor', {get: () =>  ''})
+        Object.defineProperty(navigator, 'oscpu', {get: () =>  'Windows NT 10.0; Win64; x64'})
+
+      })
+
+      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Gecko/20100101 Firefox/73.0 Chrome/114.0.0.0 Safari/537.36');
+
+      await page.goto(weblink, { waitUntil: 'networkidle0', timeout: 0 });
 
 
+
+      await puppeteer.use(RecaptchaPlugin({
+          provider: { id: '2captcha', token: process.env.recapcha },
+          visualFeedback: true // colorize reCAPTCHAs (violet = detected, green = solved)
+        })
+      );
+      // let { captchas } = await page.findRecaptchas()
+      // let { solutions } = await page.getRecaptchaSolutions(captchas)
+      // let { solved, error } = await page.enterRecaptchaSolutions(solutions)
 
       await page.setDefaultNavigationTimeout(0);
       if (!browser.isConnected()) {
@@ -67,11 +85,15 @@ const arr = data.map(Object.values);
       }
 
       const date = new Date(dados['nascimento']);
-
+      
       const databr = date.toLocaleDateString('pt-BR');
+      let cpf = dados['cpf'].toString();
+      if(cpf.length < 11){
+        cpf = cpf.padStart(11, '0');
+      }
 
       await page.type('#name', dados["nome"]);
-      await page.type("#cpf", dados['cpf'].toString());
+      await page.type("#cpf", cpf);
       await page.type("#birthDate", databr.toString());
       await page.type("#whatsappNumber", dados['celular'].toString());
       await page.click("#term");
@@ -98,48 +120,15 @@ const arr = data.map(Object.values);
           logger.info('Pagina fechada com sucesso');
           return false;
         }
-        await page.close();
-        // browser.close();
         continue;
-
-        // if (await page.$eval(".swal2-x-mark", element => element.textContent) !== null) {
-        //   logger.error('Não foi possivel encontrar para o cliente: ' + data.nome);
-        // }
 
       } catch (Exception) {
         page.waitForNavigation(),
           logger.info('Pagina aberta com sucesso');
       }
-
-
-      Promise.all([
-        newPage = (await browser.pages())[1]
-      ])
-
-      await newPage.setDefaultNavigationTimeout(0);
-      console.table(newPage);
-      if (newPage != null) {
-        //TODO ver aq se vai retornar os dados certo do insert
-        logger.info('Pagina aberta com sucesso');
-
-        await Promise.all(
-          [
-            newPage.waitForSelector('#template-result', { timeout: 0 }),
-          ]
-        )
-        if (await newPage.$eval("#template-result", element => element.textContent) !== null) {
-          logger.info(data['CPF'] + ' Cadastrado com sucesso!');
-        }
-        continue;
-      
-      }
-      else {
-        logger.error('Pagina não aberta');
-        continue;
-
-      }
-
-      //await browser.close();
+      const tempo = parseInt(process.env.TEMPO, 10);
+      await new Promise(resolve => setTimeout(resolve, tempo));
+      continue;
 
     }
   }
