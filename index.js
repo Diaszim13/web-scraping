@@ -25,47 +25,40 @@ puppeteer.use(stelphPlugin());
   //C:\\Users\\mathe\\AppData\\Local\\Programs\\Opera\\launcher.exe
 
   const logger = new Logger();
-  const browser = await puppeteer.launch({ headless: false, args: ['--disable-web-security', '--disable-features=IsolateOrigins,site-per-process'] });
-  let page = await browser.newPage();
+  const browser = await puppeteer.launch({ headless: false,
+     args: ['--disable-web-security', '--disable-features=IsolateOrigins,site-per-process']
+    });
+
+  const page = await browser.newPage();
+
+  await page.evaluateOnNewDocument(() => {
+    Object.defineProperty(navigator, 'platform', {get: () =>  'Win32'})
+    Object.defineProperty(navigator, 'productSub', {get: () =>  '20100101'})
+    Object.defineProperty(navigator, 'vendor', {get: () =>  ''})
+    Object.defineProperty(navigator, 'oscpu', {get: () =>  'Windows NT 10.0; Win64; x64'})
+  })
+
+  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Gecko/20100101 Firefox/73.0 Chrome/114.0.0.0 Safari/537.36');
+
 
   // Navegar até a página desejada
   // ALGO COM swal2-title e swal2-content
   for (const data of arr) {
     if (data) {
 
-      await page.evaluateOnNewDocument(() => {
-        Object.defineProperty(navigator, 'platform', {get: () =>  'Win32'})
-        Object.defineProperty(navigator, 'productSub', {get: () =>  '20100101'})
-        Object.defineProperty(navigator, 'vendor', {get: () =>  ''})
-        Object.defineProperty(navigator, 'oscpu', {get: () =>  'Windows NT 10.0; Win64; x64'})
-
-      })
-
-      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Gecko/20100101 Firefox/73.0 Chrome/114.0.0.0 Safari/537.36');
-
-      await page.goto(weblink, { waitUntil: 'networkidle0', timeout: 0 });
-
-
+      await page.goto(weblink, { waitUntil: 'networkidle2', timeout: 0 });
 
       await puppeteer.use(RecaptchaPlugin({
           provider: { id: '2captcha', token: process.env.recapcha },
           visualFeedback: true // colorize reCAPTCHAs (violet = detected, green = solved)
         })
       );
-      // let { captchas } = await page.findRecaptchas()
-      // let { solutions } = await page.getRecaptchaSolutions(captchas)
-      // let { solved, error } = await page.enterRecaptchaSolutions(solutions)
 
       await page.setDefaultNavigationTimeout(0);
       if (!browser.isConnected()) {
         logger.info('Pagina fechada com sucesso');
         return false;
       }
-      // process.env.CPF = data.CPF;
-
-      // let val = await page.waitForSelector('#recaptcha-token', { timeout: 0 });
-
-        // await page.solveRecaptchas()
       
       let dados = {
         nome: data[0],
@@ -110,16 +103,17 @@ puppeteer.use(stelphPlugin());
           logger.info('Pagina fechada com sucesso');
           return false;
         }
+        await new Promise(resolve => setTimeout(resolve, tempo));
         continue;
 
       } catch (Exception) {
         page.waitForNavigation(),
           logger.info('Pagina aberta com sucesso');
       }
+
       const tempo = parseInt(process.env.TEMPO, 10);
       await new Promise(resolve => setTimeout(resolve, tempo));
       continue;
-
     }
   }
   setTimeout(() => {
