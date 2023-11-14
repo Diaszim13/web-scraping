@@ -23,7 +23,10 @@ const arr = data.map(Object.values);
 
 (async () => {
   const logger = new Logger();
-  const browser = await puppeteer.launch({ headless: true, args: ['--disable-web-security', '--disable-features=IsolateOrigins,site-per-process'] });
+  const browser = await puppeteer.launch({ headless: false,
+     args: ['--disable-web-security',
+    '--disable-features=IsolateOrigins,site-per-process',
+  '--proxy-server=http://localhost:8082'] });
   let page = await browser.newPage();
 
   for (const data of arr) {
@@ -37,6 +40,18 @@ const arr = data.map(Object.values);
       })
 
       await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Gecko/20100101 Firefox/73.0 Chrome/114.0.0.0 Safari/537.36');
+
+      await page.setExtraHTTPHeaders({ 
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36', 
+        'upgrade-insecure-requests': '1', 
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8', 
+        'accept-encoding': 'gzip, deflate, br', 
+        'accept-language': 'en-US,en;q=0.9,en;q=0.8' 
+      }); 
+
+      // await page.authenticate({ username: process.env.USER, password: process.env.PASS });
+
+      await page.waitForTimeout((Math.floor(Math.random() * 12) + 5) * 1000) 
 
       await page.goto(weblink, { waitUntil: 'networkidle0', timeout: 0 });
 
@@ -92,7 +107,7 @@ const arr = data.map(Object.values);
           logger.info('Pagina fechada com sucesso');
           return false;
         }
-
+        console.log("==NAO FOI==");
         continue;
 
       } catch (Exception) {
@@ -101,6 +116,7 @@ const arr = data.map(Object.values);
       }
       const tempo = parseInt(process.env.TEMPO, 10);
       await new Promise(resolve => setTimeout(resolve, tempo));
+      console.log("==FOI==");
       continue;
 
     }
